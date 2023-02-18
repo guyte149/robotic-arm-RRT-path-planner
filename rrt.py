@@ -7,10 +7,8 @@ import sys
 import math
 import numpy as np
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
-                "/../../Sampling_based_Planning/")
-
 import env, plotting, utils
+import time
 from trajectory import Trajectory
 
 
@@ -96,21 +94,25 @@ class Rrt:
         dy = node_end.y - node_start.y
         return math.hypot(dx, dy), math.atan2(dy, dx)
 
+
 def convert_angles_path_to_field_path(angle_path):
     for point in angle_path:
         pass
 
-def main():
-    x_start = (90, -90)  # Starting node
-    x_goal = (100, -120)  # Goal node
 
+def main():
+    x_start = (50, 30)  # Starting node
+    x_goal = (130, -210)  # Goal node
+
+    t1 = time.time()
     rrt = Rrt(x_start, x_goal, 1, 0.05, 10000)
     path = rrt.planning()
+    print(f"total calculation time: {time.time() - t1}")
     # field_path = convert_angles_path_to_field_path(path)
     # field_path = np.array([np.array(xi) for xi in field_path])
 
-    traj = Trajectory(path)
-    traj.calculate()
+    # traj = Trajectory(path)
+    # traj.calculate()
     # calculate_trajectory(path, MAX_V, a_max)
 
     if path:

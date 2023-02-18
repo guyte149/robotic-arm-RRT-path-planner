@@ -103,7 +103,7 @@ class Trajectory:
         ## acceleration stamps ofr each path semgent
         self.a_vectors.append(np.repeat(MAX_A, self.t_vectors[0].shape))
         self.a_vectors.append(np.repeat(-MAX_A, self.t_vectors[1].shape))
-        a_array = np.concatenate(self.a_vectors)
+        self.a_array = np.concatenate(self.a_vectors)
 
     def _get_path_cumsum(self):
         return np.concatenate((np.zeros(1), np.cumsum((np.linalg.norm(np.diff(self.path, axis=0), axis=1)))))
