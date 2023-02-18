@@ -2,14 +2,14 @@
 RRT_2D
 """
 
-import os
-import sys
 import math
+import time
+
 import numpy as np
 
-import env, plotting, utils
-import time
-from trajectory import Trajectory
+import env
+import plotting
+import utils
 
 
 class Node:
@@ -99,32 +99,63 @@ def convert_angles_path_to_field_path(angle_path):
     field_path = list()
     for point in angle_path:
         lower_vec = np.array([0.87 * math.cos(math.radians(point[0])), 0.87 * math.sin(math.radians(point[0]))])
-        upper_vec = np.array([-0.83 * math.cos(math.radians(point[1])), -0.83 * math.sin(math.radians(point[1]))])
+        upper_vec = np.array([0.83 * math.cos(math.radians(point[1])), 0.83 * math.sin(math.radians(point[1]))])
         field_path.append(lower_vec + upper_vec)
-    return field_path,
+    return field_path
+
+
+def smooth_path(rrt_solution, max_iter=100, tolerance=0.01):
+    """
+    Smooth an RRT solution using a simple gradient descent algorithm.
+
+    :param rrt_solution: The RRT solution to be smoothed, represented as a list of 2D points.
+    :param max_iter: The maximum number of iterations to perform. Defaults to 100.
+    :param tolerance: The minimum distance between two successive iterations at which to stop. Defaults to 0.01.
+    :return: The smoothed RRT solution, represented as a list of 2D points.
+    """
+    smoothed_path = rrt_solution.copy()
+    iter_count = 0
+    while iter_count < max_iter:
+        last_point = smoothed_path[0]
+        for i in range(1, len(smoothed_path) - 1):
+            current_point = smoothed_path[i]
+            next_point = smoothed_path[i+1]
+            new_point = current_point + 0.5 * (last_point + next_point - 2 * current_point)
+            smoothed_path[i] = new_point
+            last_point = current_point
+        iter_count += 1
+        if np.linalg.norm(smoothed_path[-1] - rrt_solution[-1]) < tolerance:
+            break
+    return smoothed_path
 
 
 def main():
-    x_start = (50, 30)  # Starting node
-    x_goal = (130, -210)  # Goal node
+    x_start = (90, -90)  # Starting node
+    x_goal = (90, -210)  # Goal node
 
     t1 = time.time()
     rrt = Rrt(x_start, x_goal, 1, 0.1, 10000)
     path = rrt.planning()
-    print(f"total calculation time: {time.time() - t1}")
-    field_path = convert_angles_path_to_field_path(path)
-    field_path = np.array([np.array(xi) for xi in field_path])
+    print(f"rrt calculation time: {time.time() - t1}")
+
+    path = np.array([np.array(xi) for xi in path])
+    t1 = time.time()
+    smoothed_path = smooth_path(path)
+    print(f"smoothing calculation time: {time.time() - t1}")
+
+    field_path = convert_angles_path_to_field_path(smoothed_path)
+
+    if path is not None:
+        rrt.plotting.animation(rrt.vertex, [path, smoothed_path], "RRT", True)
+    else:
+        print("No Path Found!")
+
+    rrt.plotting.plot_path(smoothed_path, equal_axis=True)
+    rrt.plotting.plot_path(field_path, equal_axis=True)
 
     # traj = Trajectory(path)
     # traj.calculate()
     # calculate_trajectory(path, MAX_V, a_max)
-
-    if path:
-        rrt.plotting.animation(rrt.vertex, path, "RRT", True)
-    else:
-        print("No Path Found!")
-
-    rrt.plotting.plot_path(field_path)
 
 
 if __name__ == '__main__':

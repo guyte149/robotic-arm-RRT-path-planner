@@ -3,13 +3,8 @@ Plotting tools for Sampling-based algorithms
 @author: huiming zhou
 """
 
-import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
-                "/../../Sampling_based_Planning/")
+import matplotlib.pyplot as plt
 
 import env
 
@@ -22,10 +17,12 @@ class Plotting:
         self.obs_circle = self.env.obs_circle
         self.obs_rectangle = self.env.obs_rectangle
 
-    def animation(self, nodelist, path, name, animation=False):
+    def animation(self, nodelist, paths, name, animation=False):
         self.plot_grid(name)
         self.plot_visited(nodelist, animation)
-        self.plot_path(path)
+        for path in paths:
+            self.plot_path(path, plt_show=False)
+        plt.show()
 
     def animation_connect(self, V1, V2, path, name):
         self.plot_grid(name)
@@ -34,7 +31,6 @@ class Plotting:
 
     def plot_grid(self, name):
         fig, ax = plt.subplots()
-
 
         for (ox, oy, w, h) in self.obs_bound:
             ax.add_patch(
@@ -113,8 +109,11 @@ class Plotting:
         plt.pause(0.01)
 
     @staticmethod
-    def plot_path(path):
+    def plot_path(path, equal_axis=False, plt_show=True):
         if len(path) != 0:
+            if equal_axis:
+                plt.axis('equal')
             plt.plot([x[0] for x in path], [x[1] for x in path], '-r', linewidth=2)
             plt.pause(0.01)
-        plt.show()
+        if plt_show:
+            plt.show()
