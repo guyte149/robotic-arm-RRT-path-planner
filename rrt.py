@@ -6,6 +6,7 @@ import math
 import time
 
 import numpy as np
+from matplotlib import pyplot as plt
 
 import env
 import plotting
@@ -130,17 +131,17 @@ def smooth_path(rrt_solution, max_iter=100, tolerance=0.01):
 
 
 def main():
-    x_start = (90, -90)  # Starting node
-    x_goal = (90, -210)  # Goal node
+    x_start = (50, 10)  # Starting node
+    x_goal = (130, -190)  # Goal node
 
     t1 = time.time()
-    rrt = Rrt(x_start, x_goal, 1, 0.1, 10000)
+    rrt = Rrt(x_start, x_goal, 6, 0.1, 10000)
     path = rrt.planning()
     print(f"rrt calculation time: {time.time() - t1}")
 
     path = np.array([np.array(xi) for xi in path])
     t1 = time.time()
-    smoothed_path = smooth_path(path)
+    smoothed_path = smooth_path(path, tolerance=0.01)
     print(f"smoothing calculation time: {time.time() - t1}")
 
     field_path = convert_angles_path_to_field_path(smoothed_path)
@@ -151,8 +152,12 @@ def main():
         print("No Path Found!")
 
     rrt.plotting.plot_path(smoothed_path, equal_axis=True)
-    rrt.plotting.plot_path(field_path, equal_axis=True)
 
+    fig, ax = plt.subplots()
+    rect = plt.Rectangle((-0.84, 0.25), 0.47, -0.4, linewidth=1, edgecolor='r', facecolor='none')
+    ax.add_patch(rect)
+    rrt.plotting.plot_path(field_path, equal_axis=True, plt_show=True)
+    # plt.show()
     # traj = Trajectory(path)
     # traj.calculate()
     # calculate_trajectory(path, MAX_V, a_max)
