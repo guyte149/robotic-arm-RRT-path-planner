@@ -37,7 +37,7 @@ class Env:
     @staticmethod
     def obs_circle():
         obs_cir = [
-            [90, -90, 20],
+            [90, -90, 5],
             # [46, 20, 2],
             # [15, 5, 2],
             # [37, 7, 3],

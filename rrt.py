@@ -96,8 +96,12 @@ class Rrt:
 
 
 def convert_angles_path_to_field_path(angle_path):
+    field_path = list()
     for point in angle_path:
-        pass
+        lower_vec = np.array([0.87 * math.cos(math.radians(point[0])), 0.87 * math.sin(math.radians(point[0]))])
+        upper_vec = np.array([-0.83 * math.cos(math.radians(point[1])), -0.83 * math.sin(math.radians(point[1]))])
+        field_path.append(lower_vec + upper_vec)
+    return field_path,
 
 
 def main():
@@ -105,11 +109,11 @@ def main():
     x_goal = (130, -210)  # Goal node
 
     t1 = time.time()
-    rrt = Rrt(x_start, x_goal, 1, 0.05, 10000)
+    rrt = Rrt(x_start, x_goal, 1, 0.1, 10000)
     path = rrt.planning()
     print(f"total calculation time: {time.time() - t1}")
-    # field_path = convert_angles_path_to_field_path(path)
-    # field_path = np.array([np.array(xi) for xi in field_path])
+    field_path = convert_angles_path_to_field_path(path)
+    field_path = np.array([np.array(xi) for xi in field_path])
 
     # traj = Trajectory(path)
     # traj.calculate()
@@ -119,6 +123,8 @@ def main():
         rrt.plotting.animation(rrt.vertex, path, "RRT", True)
     else:
         print("No Path Found!")
+
+    rrt.plotting.plot_path(field_path)
 
 
 if __name__ == '__main__':
