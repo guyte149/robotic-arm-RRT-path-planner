@@ -120,7 +120,7 @@ def smooth_path(rrt_solution, max_iter=100, tolerance=0.01):
         last_point = smoothed_path[0]
         for i in range(1, len(smoothed_path) - 1):
             current_point = smoothed_path[i]
-            next_point = smoothed_path[i+1]
+            next_point = smoothed_path[i + 1]
             new_point = current_point + 0.5 * (last_point + next_point - 2 * current_point)
             smoothed_path[i] = new_point
             last_point = current_point
@@ -128,6 +128,55 @@ def smooth_path(rrt_solution, max_iter=100, tolerance=0.01):
         if np.linalg.norm(smoothed_path[-1] - rrt_solution[-1]) < tolerance:
             break
     return smoothed_path
+
+
+def calculate_velocities_times(path, max_velocity, max_acceleration):
+    path = np.radians(path)
+    velocities = []
+    times = []
+    last_angle = path[0]
+    last_velocity = [0, 0]
+    last_time = 0
+
+    for angle in path[1:]:
+        # Calculate the distance between the current angle and the last angle
+        distance = math.sqrt((angle[0] - last_angle[0]) ** 2 + (angle[1] - last_angle[1]) ** 2)
+
+        # Calculate the maximum velocity and acceleration based on the distance
+        max_vel = min(max_velocity, math.sqrt(2 * max_acceleration * distance))
+        max_acc = max_acceleration
+
+        # Calculate the time it will take to reach the maximum velocity and acceleration
+        time_to_max_vel = max_vel / max_acc
+        distance_to_max_vel = 0.5 * max_acc * time_to_max_vel ** 2
+
+        # Calculate the time it will take to cover the remaining distance
+        remaining_distance = distance - distance_to_max_vel * 2
+        remaining_time = remaining_distance / max_vel
+
+        # Calculate the total time for the movement
+        total_time = time_to_max_vel * 2 + remaining_time
+
+        # Calculate the velocity at each joint
+        vel1 = (angle[0] - last_angle[0]) / total_time
+        vel2 = (angle[1] - last_angle[1]) / total_time
+        velocity = [vel1, vel2]
+
+        # Limit the velocity to the maximum velocity
+        velocity_mag = math.sqrt(vel1 ** 2 + vel2 ** 2)
+        if velocity_mag > max_vel:
+            velocity = [vel1 * max_vel / velocity_mag, vel2 * max_vel / velocity_mag]
+
+        # Add the velocity and time to the arrays
+        velocities.append(velocity)
+        times.append(total_time)
+
+        # Update the last angle and velocity
+        last_angle = angle
+        last_velocity = velocity
+        last_time += total_time
+
+    return velocities, times
 
 
 def main():
@@ -153,14 +202,15 @@ def main():
 
     rrt.plotting.plot_path(smoothed_path, equal_axis=True)
 
+    import pickle
+    with open('path.pkl', 'wb') as f:
+        pickle.dump(smoothed_path, f)
+
     fig, ax = plt.subplots()
     rect = plt.Rectangle((-0.84, 0.25), 0.47, -0.4, linewidth=1, edgecolor='r', facecolor='none')
     ax.add_patch(rect)
     rrt.plotting.plot_path(field_path, equal_axis=True, plt_show=True)
-    # plt.show()
-    # traj = Trajectory(path)
-    # traj.calculate()
-    # calculate_trajectory(path, MAX_V, a_max)
+
 
 
 if __name__ == '__main__':
